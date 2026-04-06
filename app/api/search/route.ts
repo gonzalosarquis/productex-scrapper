@@ -1,15 +1,37 @@
 import { NextResponse } from 'next/server'
 
 import { ApifyService } from '@/lib/apify'
-import { createClient } from '@/lib/supabase/server'
+import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 import type { SearchTask } from '@/lib/types'
+
+export async function GET(request: Request) {
+  try {
+    const { supabase, user } = await getSupabaseForApiRoute(request)
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data, error } = await supabase
+      .from('search_tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ tasks: data ?? [] })
+  } catch (e) {
+    console.error(e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

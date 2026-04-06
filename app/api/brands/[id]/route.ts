@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createClient } from '@/lib/supabase/server'
+import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 import type { Brand } from '@/lib/types'
 
 type Params = { params: Promise<{ id: string }> }
@@ -14,10 +14,7 @@ const ALLOWED_PUT: (keyof Brand)[] = [
 
 export async function PUT(request: Request, context: Params) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -63,12 +60,9 @@ export async function PUT(request: Request, context: Params) {
   }
 }
 
-export async function DELETE(_request: Request, context: Params) {
+export async function DELETE(request: Request, context: Params) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -2,16 +2,13 @@ import { NextResponse } from 'next/server'
 
 import { ApifyService } from '@/lib/apify'
 import { pollAndMaybeFinalize } from '@/lib/complete-search'
-import { createClient } from '@/lib/supabase/server'
+import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 
 type Params = { params: Promise<{ id: string }> }
 
-export async function GET(_request: Request, context: Params) {
+export async function GET(request: Request, context: Params) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
