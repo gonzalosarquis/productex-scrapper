@@ -47,21 +47,20 @@ export async function POST(request: Request) {
     if (
       !body ||
       typeof body.name !== 'string' ||
-      !Array.isArray(body.keywords) ||
-      body.keywords.length === 0 ||
+      !Array.isArray(body.categories) ||
       typeof body.min_followers !== 'number'
     ) {
       return NextResponse.json(
         {
           error: 'Invalid body',
           message:
-            'Se requiere name (string), keywords (array no vacío) y min_followers (número).',
+            'Se requiere name (string), categories (array) y min_followers (número).',
         },
         { status: 400 }
       )
     }
 
-    const keywords = body.keywords.map((k: unknown) => String(k))
+    const categories = body.categories.map((c: unknown) => String(c))
     const countries = Array.isArray(body.countries)
       ? body.countries.map((c: unknown) => String(c))
       : []
@@ -79,7 +78,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         name: body.name,
-        keywords,
+        categories,
         countries,
         cities,
         min_followers,

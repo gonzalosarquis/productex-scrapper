@@ -90,7 +90,7 @@ export function useSearchTasks() {
           },
           body: JSON.stringify({
             name: data.name,
-            keywords: data.keywords,
+            categories: data.categories,
             countries: data.countries,
             cities: data.cities,
             min_followers: data.min_followers,

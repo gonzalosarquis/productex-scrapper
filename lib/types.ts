@@ -2,7 +2,7 @@ export interface SearchTask {
   id: string
   user_id: string
   name: string
-  keywords: string[]
+  categories: string[]
   countries: string[]
   cities: string[]
   min_followers: number
@@ -58,7 +58,7 @@ export interface ScraperConfig {
 
 export interface SearchFormData {
   name: string
-  keywords: string[]
+  categories: string[]
   countries: string[]
   cities: string[]
   min_followers: number

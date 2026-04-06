@@ -64,7 +64,7 @@ export async function finalizeSuccessfulRun(
   }
 
   const raw = await apify.getRunResults(task.apify_run_id, token)
-  let rows = processBrandData(raw)
+  let rows = processBrandData(raw, task.categories ?? [])
   rows = filterByFollowerRange(rows, task)
 
   if (rows.length === 0) {

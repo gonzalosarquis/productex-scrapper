@@ -8,6 +8,19 @@ export type ApifyRunStatus =
 
 const API_BASE = 'https://api.apify.com/v2'
 
+const ARGENTINA_FASHION_HASHTAGS = [
+  'marcaargentina',
+  'hechoenargentina',
+  'indumentariaargentina',
+  'modaargentina',
+  'showroomargentina',
+  'ropafemenina',
+  'ropaargentina',
+  'tiendaonlineargentina',
+  'marcaderopa',
+  'indumentaria',
+]
+
 function encodeActorId(actorId: string): string {
   return actorId.replace('/', '~')
 }
@@ -31,9 +44,11 @@ function mapApifyStatus(raw: string): ApifyRunStatus {
 
 export class ApifyService {
   /**
-   * Inicia un run del actor de Instagram con búsqueda por keywords y límites.
+   * Inicia un run del actor de Instagram: hashtags AR de moda (explore/tags).
+   * Las categorías de la tarea se filtran post-scrape en brand-processor.
    */
   async startSearch(config: ScraperConfig, task: SearchTask): Promise<string> {
+    void task
     const token = config.apify_token
     if (!token) {
       throw new Error('Missing Apify token in scraper config')
@@ -42,22 +57,14 @@ export class ApifyService {
     const actorPath = encodeActorId(config.actor_id || 'apify/instagram-scraper')
     const url = `${API_BASE}/acts/${encodeURIComponent(actorPath)}/runs?token=${encodeURIComponent(token)}`
 
-    const locationHints = [...task.countries, ...task.cities].filter(Boolean)
-    const searchQuery = [
-      ...(task.keywords.length > 0 ? task.keywords : [task.name]),
-      ...locationHints,
-    ].join(' ')
-
-    const searchLimit = Math.min(Math.max(1, config.max_items), 250)
-    const resultsLimit = Math.min(Math.max(1, config.max_items), 200)
+    const startUrls = ARGENTINA_FASHION_HASHTAGS.map((tag) => ({
+      url: `https://www.instagram.com/explore/tags/${tag}/`,
+    }))
 
     const body: Record<string, unknown> = {
-      searchTerms: task.keywords,
-      search: searchQuery,
-      searchType: 'user',
-      searchLimit,
-      resultsLimit,
+      startUrls,
       resultsType: 'posts',
+      resultsLimit: Math.min(config.max_items, 100),
       addParentData: true,
     }
 

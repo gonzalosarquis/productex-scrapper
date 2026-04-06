@@ -1,9 +1,14 @@
 -- Tabla: search_tasks
+--
+-- Bases nuevas: la columna se llama `categories` (filtro post-scrape por categoría de negocio IG).
+-- Si tu proyecto ya existía con la columna `keywords`, ejecutá en Supabase SQL Editor:
+--   ALTER TABLE search_tasks RENAME COLUMN keywords TO categories;
+--
 CREATE TABLE search_tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  keywords TEXT[] NOT NULL DEFAULT '{}',
+  categories TEXT[] NOT NULL DEFAULT '{}',
   countries TEXT[] DEFAULT '{}',
   cities TEXT[] DEFAULT '{}',
   min_followers INTEGER DEFAULT 1000,

@@ -115,6 +115,69 @@ function computeAverages(posts: PostLike[]): {
   }
 }
 
+const FASHION_CATEGORIES = [
+  'clothing',
+  'boutique',
+  'fashion',
+  'moda',
+  'ropa',
+  'indumentaria',
+  'tienda de ropa',
+  'clothing store',
+  'clothing brand',
+  'apparel',
+  'brand',
+  'marca de ropa',
+  'tienda de moda',
+  'shopping',
+  'retail',
+  'wear',
+  'diseñador',
+  'designer',
+  'textile',
+  'textil',
+  'lencería',
+  'underwear',
+  'sportswear',
+  'swimwear',
+  'calzado',
+  'footwear',
+  'accesorios de moda',
+  'fashion accessories',
+]
+
+function isFashionBusiness(
+  item: Record<string, unknown>,
+  userCategories: string[]
+): boolean {
+  const isBusiness = Boolean(
+    item.isBusinessAccount ?? item.is_business_account
+  )
+  if (!isBusiness) return false
+
+  const profileCategory = str(
+    item.businessCategoryName ??
+      item.category ??
+      item.businessCategory ??
+      item.igCategory ??
+      item.categoryName
+  )
+
+  if (!profileCategory) return false
+
+  const lower = profileCategory.toLowerCase()
+
+  if (userCategories.length > 0) {
+    return userCategories.some(
+      (uc) =>
+        lower.includes(uc.toLowerCase()) ||
+        uc.toLowerCase().includes(lower)
+    )
+  }
+
+  return FASHION_CATEGORIES.some((fc) => lower.includes(fc))
+}
+
 function computeScore(params: {
   followers: number
   engagementRate: number
@@ -200,6 +263,13 @@ function normalizeRow(item: Record<string, unknown>): Partial<Brand> | null {
 
   const instagram_url = `https://www.instagram.com/${username.replace(/^@/, '')}/`
 
+  const categoryNote = str(
+    item.businessCategoryName ??
+      item.category ??
+      item.businessCategory ??
+      null
+  )
+
   return {
     username,
     full_name,
@@ -222,7 +292,7 @@ function normalizeRow(item: Record<string, unknown>): Partial<Brand> | null {
     instagram_url,
     status: 'pending',
     score,
-    notes: null,
+    notes: categoryNote,
     last_contacted_at: null,
   }
 }
@@ -249,19 +319,26 @@ function mergeBrand(a: Partial<Brand>, b: Partial<Brand>): Partial<Brand> {
     engagement_rate: pick('engagement_rate') ?? null,
     email: pick('email') ?? null,
     phone: pick('phone') ?? null,
+    notes: pick('notes') ?? null,
   }
 }
 
 /**
  * Transforma items del dataset de Apify Instagram Scraper al formato Brand.
+ * `filterCategories` acota por categoría de negocio de Instagram; vacío = lista FASHION_CATEGORIES.
  */
-export function processBrandData(rawData: unknown[]): Partial<Brand>[] {
+export function processBrandData(
+  rawData: unknown[],
+  filterCategories: string[] = []
+): Partial<Brand>[] {
   const byUser = new Map<string, Partial<Brand>>()
 
   for (const raw of rawData) {
     if (!raw || typeof raw !== 'object') continue
-    const row = normalizeRow(raw as Record<string, unknown>)
+    const item = raw as Record<string, unknown>
+    const row = normalizeRow(item)
     if (!row?.username) continue
+    if (!isFashionBusiness(item, filterCategories)) continue
 
     const u = row.username.toLowerCase()
     const existing = byUser.get(u)
