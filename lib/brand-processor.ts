@@ -333,6 +333,12 @@ export function processBrandData(
 ): Partial<Brand>[] {
   const byUser = new Map<string, Partial<Brand>>()
 
+  console.error(
+    'SAMPLE_ITEM:',
+    JSON.stringify(rawData[0] as Record<string, unknown>, null, 2)
+  )
+  console.error('TOTAL_RAW:', rawData.length)
+
   for (const raw of rawData) {
     if (!raw || typeof raw !== 'object') continue
     const item = raw as Record<string, unknown>
