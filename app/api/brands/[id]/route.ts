@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { jsonServerError, jsonUnauthorized } from '@/lib/api-response'
 import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 import type { Brand } from '@/lib/types'
 
@@ -17,14 +18,20 @@ export async function PUT(request: Request, context: Params) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { id } = await context.params
     const body = await request.json().catch(() => null)
 
     if (!body || typeof body !== 'object') {
-      return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid body',
+          message: 'El cuerpo debe ser un objeto JSON.',
+        },
+        { status: 400 }
+      )
     }
 
     const updates: Partial<Brand> = {}
@@ -46,17 +53,25 @@ export async function PUT(request: Request, context: Params) {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     if (!data) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Not found', message: 'Marca no encontrada o sin permiso.' },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ brand: data })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }
 
@@ -65,7 +80,7 @@ export async function DELETE(request: Request, context: Params) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { id } = await context.params
@@ -79,16 +94,24 @@ export async function DELETE(request: Request, context: Params) {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     if (!data) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Not found', message: 'Marca no encontrada o sin permiso.' },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ ok: true, deleted: data.id })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }

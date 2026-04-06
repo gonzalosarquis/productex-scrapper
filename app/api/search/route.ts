@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { ApifyService } from '@/lib/apify'
+import { jsonServerError, jsonUnauthorized } from '@/lib/api-response'
 import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 import type { SearchTask } from '@/lib/types'
 
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { data, error } = await supabase
@@ -19,13 +20,18 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ tasks: data ?? [] })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }
 
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const body = await request.json().catch(() => null)
@@ -46,7 +52,11 @@ export async function POST(request: Request) {
       typeof body.min_followers !== 'number'
     ) {
       return NextResponse.json(
-        { error: 'Invalid body: require name, keywords (non-empty array), min_followers' },
+        {
+          error: 'Invalid body',
+          message:
+            'Se requiere name (string), keywords (array no vacío) y min_followers (número).',
+        },
         { status: 400 }
       )
     }
@@ -81,7 +91,10 @@ export async function POST(request: Request) {
 
     if (insertError || !inserted) {
       return NextResponse.json(
-        { error: insertError?.message ?? 'Insert failed' },
+        {
+          error: 'Insert failed',
+          message: insertError?.message ?? 'No se pudo crear la búsqueda.',
+        },
         { status: 500 }
       )
     }
@@ -131,7 +144,11 @@ export async function POST(request: Request) {
           .single()
 
         return NextResponse.json(
-          { task: (failedTask ?? task) as SearchTask, error: msg },
+          {
+            task: (failedTask ?? task) as SearchTask,
+            error: 'Apify error',
+            message: msg,
+          },
           { status: 502 }
         )
       }
@@ -140,6 +157,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ task })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }

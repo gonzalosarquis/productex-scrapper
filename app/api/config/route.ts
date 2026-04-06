@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { jsonServerError, jsonUnauthorized } from '@/lib/api-response'
 import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 
 export async function GET(request: Request) {
@@ -7,7 +8,7 @@ export async function GET(request: Request) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { data, error } = await supabase
@@ -17,13 +18,18 @@ export async function GET(request: Request) {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ config: data })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }
 
@@ -32,12 +38,18 @@ export async function POST(request: Request) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') {
-      return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid body',
+          message: 'El cuerpo debe ser un objeto JSON.',
+        },
+        { status: 400 }
+      )
     }
 
     const { data: existing } = await supabase
@@ -68,7 +80,10 @@ export async function POST(request: Request) {
         .single()
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(
+          { error: 'Database error', message: error.message },
+          { status: 500 }
+        )
       }
       return NextResponse.json({ config: data })
     }
@@ -80,12 +95,17 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ config: data })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }

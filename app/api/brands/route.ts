@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { jsonServerError, jsonUnauthorized } from '@/lib/api-response'
 import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 
 export async function GET(request: Request) {
@@ -7,7 +8,7 @@ export async function GET(request: Request) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { data, error } = await supabase
@@ -17,12 +18,17 @@ export async function GET(request: Request) {
       .order('score', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ brands: data ?? [] })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }

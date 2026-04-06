@@ -8,9 +8,9 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/Badge'
 import type { Brand } from '@/lib/types'
 
-const EMAIL_RE =
-  /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Formato general: dígitos, espacios y símbolos típicos de teléfono */
 const PHONE_RE = /^[+()\d][\d\s().-]{7,}$/
 
 const STATUS_OPTIONS: Brand['status'][] = [
@@ -63,7 +63,7 @@ export function BrandModal({
       return
     }
     if (ph && !PHONE_RE.test(ph)) {
-      toast.error('Teléfono inválido (mín. 8 dígitos o formato internacional)')
+      toast.error('Teléfono inválido')
       return
     }
 

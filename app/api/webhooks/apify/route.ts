@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { jsonServerError } from '@/lib/api-response'
 import { ApifyService } from '@/lib/apify'
 import { finalizeSuccessfulRun } from '@/lib/complete-search'
 import { createServiceRoleClient } from '@/lib/supabase/admin'
@@ -17,7 +18,11 @@ export async function POST(request: Request) {
 
     if (!url || !serviceKey) {
       return NextResponse.json(
-        { error: 'Server misconfigured' },
+        {
+          error: 'Server misconfigured',
+          message:
+            'Faltan variables de entorno NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.',
+        },
         { status: 500 }
       )
     }
@@ -92,6 +97,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }

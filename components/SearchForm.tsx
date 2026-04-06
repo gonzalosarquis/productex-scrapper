@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { Loader2, Plus, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useSearchTasks } from '@/hooks/useSearchTasks'
 import type { SearchFormData } from '@/lib/types'
@@ -93,7 +94,7 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
   const [maxFollowers, setMaxFollowers] = useState('')
   const [countries, setCountries] = useState<string[]>([])
   const [cities, setCities] = useState<string[]>([])
-  const [formError, setFormError] = useState<string | null>(null)
+  const [submitCooldown, setSubmitCooldown] = useState(false)
 
   const addKeyword = useCallback(() => {
     const v = keywordInput.trim()
@@ -108,21 +109,24 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setFormError(null)
 
     const n = name.trim()
     if (!n) {
-      setFormError('El nombre de la búsqueda es obligatorio.')
+      toast.error('Nombre requerido')
       return
     }
-    if (keywords.length < 1) {
-      setFormError('Añade al menos una keyword.')
+    if (keywords.length === 0) {
+      toast.error('Agrega al menos una palabra clave')
+      return
+    }
+    if (keywords.some((k) => k.length > 50)) {
+      toast.error('Palabras clave máximo 50 caracteres')
       return
     }
 
     const min = Number(minFollowers)
-    if (!Number.isFinite(min) || min < 1) {
-      setFormError('Seguidores mínimos debe ser un número positivo.')
+    if (!Number.isFinite(min) || min <= 0) {
+      toast.error('Seguidores debe ser positivo')
       return
     }
 
@@ -130,10 +134,13 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
     if (maxRaw !== '') {
       const max = Number(maxRaw)
       if (!Number.isFinite(max) || max < min) {
-        setFormError('Seguidores máximos debe ser mayor o igual al mínimo.')
+        toast.error('Seguidores máximos debe ser mayor o igual al mínimo.')
         return
       }
     }
+
+    setSubmitCooldown(true)
+    setTimeout(() => setSubmitCooldown(false), 3000)
 
     const data: SearchFormData = {
       name: n,
@@ -148,7 +155,7 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
     onSearchComplete?.()
   }
 
-  const disabled = loading
+  const disabled = loading || submitCooldown
 
   return (
     <form
@@ -163,12 +170,6 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
           Define keywords y filtros; se usará tu configuración de Apify si existe.
         </p>
       </div>
-
-      {formError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
-          {formError}
-        </p>
-      )}
 
       <div>
         <label

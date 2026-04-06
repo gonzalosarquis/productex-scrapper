@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { ApifyService } from '@/lib/apify'
 import { pollAndMaybeFinalize } from '@/lib/complete-search'
+import { jsonServerError, jsonUnauthorized } from '@/lib/api-response'
 import { getSupabaseForApiRoute } from '@/lib/supabase/api-route'
 
 type Params = { params: Promise<{ id: string }> }
@@ -11,7 +12,7 @@ export async function GET(request: Request, context: Params) {
     const { supabase, user } = await getSupabaseForApiRoute(request)
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonUnauthorized()
     }
 
     const { id } = await context.params
@@ -24,11 +25,17 @@ export async function GET(request: Request, context: Params) {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Database error', message: error.message },
+        { status: 500 }
+      )
     }
 
     if (!taskRow) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Not found', message: 'No existe la búsqueda o no tienes acceso.' },
+        { status: 404 }
+      )
     }
 
     const { data: cfg } = await supabase
@@ -48,6 +55,8 @@ export async function GET(request: Request, context: Params) {
     return NextResponse.json({ task, status: apifyStatus })
   } catch (e) {
     console.error(e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return jsonServerError(
+      e instanceof Error ? e.message : undefined
+    )
   }
 }
