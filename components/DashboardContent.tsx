@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import {
@@ -21,9 +22,10 @@ type Tab = 'overview' | 'search' | 'results' | 'analytics'
 
 type DashboardContentProps = {
   user: User
+  analyticsPanel: ReactNode
 }
 
-export function DashboardContent({ user }: DashboardContentProps) {
+export function DashboardContent({ user, analyticsPanel }: DashboardContentProps) {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [configOpen, setConfigOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -123,13 +125,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
           )}
 
           {activeTab === 'analytics' && (
-            <div className="mx-auto flex max-w-6xl flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-white/80 py-24 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-              <BarChart3 className="mx-auto h-12 w-12 text-zinc-400" />
-              <p className="mt-4 text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                Analytics
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">Próximamente</p>
-            </div>
+            <div className="mx-auto w-full max-w-6xl">{analyticsPanel}</div>
           )}
         </main>
       </div>

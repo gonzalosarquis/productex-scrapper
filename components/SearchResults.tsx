@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 
@@ -18,7 +18,7 @@ function formatDate(iso: string) {
   }
 }
 
-export function SearchResults() {
+function SearchResultsInner() {
   const { tasks, loading, fetchTasks, getSearchStatus } = useSearchTasks()
   const tasksRef = useRef(tasks)
   tasksRef.current = tasks
@@ -121,3 +121,5 @@ export function SearchResults() {
     </div>
   )
 }
+
+export const SearchResults = memo(SearchResultsInner)

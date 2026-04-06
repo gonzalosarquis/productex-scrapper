@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { BarChart3, Loader2, Search, TrendingUp, Users } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/client'
 import { useBrands } from '@/hooks/useBrands'
 import type { SearchTask } from '@/lib/types'
 
-export function DashboardStats() {
+function DashboardStatsInner() {
   const { brands, loading: loadingBrands } = useBrands()
   const [activeSearches, setActiveSearches] = useState<number | null>(null)
   const [loadingSearchCount, setLoadingSearchCount] = useState(true)
@@ -109,3 +109,5 @@ export function DashboardStats() {
     </div>
   )
 }
+
+export const DashboardStats = memo(DashboardStatsInner)

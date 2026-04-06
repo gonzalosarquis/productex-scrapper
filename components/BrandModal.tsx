@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -116,16 +117,18 @@ export function BrandModal({
 
         <div className="max-h-[50vh] overflow-y-auto px-6 py-4">
           <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="shrink-0">
+            <div className="relative h-24 w-24 shrink-0">
               {brand.profile_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={brand.profile_image}
                   alt=""
-                  className="h-24 w-24 rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+                  width={96}
+                  height={96}
+                  sizes="96px"
+                  className="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
                 />
               ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
                   ?
                 </div>
               )}

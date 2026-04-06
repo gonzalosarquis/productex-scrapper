@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { Download, Search } from 'lucide-react'
 
 import { Badge } from '@/components/Badge'
@@ -11,7 +12,7 @@ import { VirtualTable, type ColumnDef } from '@/components/VirtualTable'
 import { useBrands } from '@/hooks/useBrands'
 import type { Brand } from '@/lib/types'
 
-export function BrandsList() {
+function BrandsListInner() {
   const { brands, loading, updateBrand, deleteBrand } = useBrands()
 
   const [usernameQ, setUsernameQ] = useState('')
@@ -53,6 +54,25 @@ export function BrandsList() {
 
   const columns: ColumnDef<Brand>[] = useMemo(
     () => [
+      {
+        key: 'avatar',
+        label: '',
+        className: 'w-14',
+        render: (b) =>
+          b.profile_image ? (
+            <Image
+              src={b.profile_image}
+              alt=""
+              width={40}
+              height={40}
+              className="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-400 dark:bg-zinc-800">
+              ?
+            </div>
+          ),
+      },
       {
         key: 'username',
         label: 'Usuario',
@@ -229,3 +249,5 @@ export function BrandsList() {
     </div>
   )
 }
+
+export const BrandsList = memo(BrandsListInner)
