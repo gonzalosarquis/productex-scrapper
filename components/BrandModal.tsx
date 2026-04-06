@@ -1,14 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
-import { Loader2, X } from 'lucide-react'
+import { ExternalLink, Loader2, MapPin, Phone, Star, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/Badge'
 import type { Brand } from '@/lib/types'
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /** Formato general: dígitos, espacios y símbolos típicos de teléfono */
 const PHONE_RE = /^[+()\d][\d\s().-]{7,}$/
@@ -38,7 +35,6 @@ export function BrandModal({
 }: BrandModalProps) {
   const [status, setStatus] = useState<Brand['status']>('pending')
   const [notes, setNotes] = useState('')
-  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -46,7 +42,6 @@ export function BrandModal({
     if (!brand) return
     setStatus(brand.status)
     setNotes(brand.notes ?? '')
-    setEmail(brand.email ?? '')
     setPhone(brand.phone ?? '')
   }, [brand])
 
@@ -55,13 +50,8 @@ export function BrandModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (readOnly || !brand) return
-    const em = email.trim()
     const ph = phone.trim()
 
-    if (em && !EMAIL_RE.test(em)) {
-      toast.error('Email inválido')
-      return
-    }
     if (ph && !PHONE_RE.test(ph)) {
       toast.error('Teléfono inválido')
       return
@@ -72,10 +62,9 @@ export function BrandModal({
       await onSave(brand.id, {
         status,
         notes: notes.trim() || null,
-        email: em || null,
         phone: ph || null,
       })
-      toast.success('Marca actualizada')
+      toast.success('Tienda actualizada')
       onClose()
     } catch {
       toast.error('No se pudo guardar')
@@ -83,6 +72,11 @@ export function BrandModal({
       setSaving(false)
     }
   }
+
+  const ratingStars =
+    brand.rating != null
+      ? `${'⭐'.repeat(Math.min(5, Math.round(brand.rating)))} ${brand.rating.toFixed(1)}`
+      : '—'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
@@ -98,12 +92,14 @@ export function BrandModal({
         className="relative z-10 my-8 w-full max-w-lg rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-950"
       >
         <div className="flex items-start justify-between gap-2 border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              @{brand.username}
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+              {brand.name}
             </h2>
-            {brand.full_name && (
-              <p className="text-sm text-zinc-500">{brand.full_name}</p>
+            {brand.category && (
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                {brand.category}
+              </p>
             )}
           </div>
           <button
@@ -115,79 +111,86 @@ export function BrandModal({
           </button>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto px-6 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative h-24 w-24 shrink-0">
-              {brand.profile_image ? (
-                <Image
-                  src={brand.profile_image}
-                  alt=""
-                  width={96}
-                  height={96}
-                  sizes="96px"
-                  className="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
-                  ?
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1 space-y-2 text-sm">
-              <div className="flex flex-wrap gap-2">
-                <Badge status={brand.status}>{brand.status}</Badge>
-                {brand.verified && (
-                  <Badge variant="info">Verificado</Badge>
-                )}
-                {brand.is_business && (
-                  <Badge variant="default">Business</Badge>
-                )}
-              </div>
-              {brand.bio && (
-                <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
-                  {brand.bio}
-                </p>
-              )}
-              <dl className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <dt className="text-zinc-500">Seguidores</dt>
-                  <dd className="font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {brand.followers.toLocaleString()}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Engagement</dt>
-                  <dd className="font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {brand.engagement_rate != null
-                      ? `${brand.engagement_rate.toFixed(2)}%`
-                      : '—'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Score</dt>
-                  <dd className="font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {brand.score}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Ubicación</dt>
-                  <dd className="text-zinc-800 dark:text-zinc-200">
-                    {[brand.city, brand.country].filter(Boolean).join(', ') || '—'}
-                  </dd>
-                </div>
-              </dl>
-              {brand.instagram_url && (
-                <a
-                  href={brand.instagram_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sky-600 hover:underline dark:text-sky-400"
-                >
-                  Ver en Instagram
-                </a>
-              )}
+        <div className="space-y-4 px-6 py-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge status={brand.status}>{brand.status}</Badge>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+            <Star className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <div>
+              <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                {ratingStars}
+              </p>
+              <p className="text-xs text-zinc-500">
+                {brand.reviews_count != null
+                  ? `${brand.reviews_count} reseñas`
+                  : 'Sin datos de reseñas'}
+              </p>
             </div>
           </div>
+
+          {(brand.address || brand.city) && (
+            <div className="flex items-start gap-2">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
+              <p className="text-zinc-700 dark:text-zinc-300">
+                {[brand.address, brand.city].filter(Boolean).join(' · ') || '—'}
+              </p>
+            </div>
+          )}
+
+          {brand.phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 shrink-0 text-zinc-400" />
+              <a
+                href={`tel:${brand.phone.replace(/\s/g, '')}`}
+                className="text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {brand.phone}
+              </a>
+            </div>
+          )}
+
+          {brand.instagram_url && (
+            <p>
+              <a
+                href={brand.instagram_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-pink-600 hover:underline dark:text-pink-400"
+              >
+                Instagram →
+              </a>
+            </p>
+          )}
+
+          {brand.website && (
+            <p>
+              <a
+                href={brand.website}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sky-600 hover:underline dark:text-sky-400"
+              >
+                Sitio web
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </p>
+          )}
+
+          {brand.google_maps_url && (
+            <p>
+              <a
+                href={brand.google_maps_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sky-600 hover:underline dark:text-sky-400"
+              >
+                Abrir en Google Maps
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </p>
+          )}
         </div>
 
         <form
@@ -223,30 +226,16 @@ export function BrandModal({
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900"
             />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                disabled={readOnly}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Teléfono
-              </label>
-              <input
-                value={phone}
-                disabled={readOnly}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900"
-              />
-            </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Teléfono (editable)
+            </label>
+            <input
+              value={phone}
+              disabled={readOnly}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button

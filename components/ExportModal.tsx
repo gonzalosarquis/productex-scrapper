@@ -6,21 +6,21 @@ import { toast } from 'sonner'
 
 import type { Brand } from '@/lib/types'
 
-export type ExportColumnKey = keyof Brand | 'full_name'
+export type ExportColumnKey = keyof Brand
 
 const ALL_COLUMNS: { key: ExportColumnKey; label: string }[] = [
-  { key: 'username', label: 'Username' },
-  { key: 'full_name', label: 'Nombre' },
-  { key: 'followers', label: 'Seguidores' },
-  { key: 'engagement_rate', label: 'Engagement %' },
-  { key: 'score', label: 'Score' },
-  { key: 'status', label: 'Estado' },
-  { key: 'email', label: 'Email' },
+  { key: 'name', label: 'Nombre' },
   { key: 'phone', label: 'Teléfono' },
-  { key: 'country', label: 'País' },
+  { key: 'address', label: 'Dirección' },
   { key: 'city', label: 'Ciudad' },
-  { key: 'instagram_url', label: 'URL Instagram' },
+  { key: 'rating', label: 'Rating' },
+  { key: 'reviews_count', label: 'Reseñas' },
+  { key: 'instagram_url', label: 'Instagram' },
   { key: 'website', label: 'Web' },
+  { key: 'google_maps_url', label: 'Google Maps' },
+  { key: 'category', label: 'Categoría' },
+  { key: 'status', label: 'Estado' },
+  { key: 'score', label: 'Score' },
   { key: 'notes', label: 'Notas' },
 ]
 
@@ -31,8 +31,7 @@ type ExportModalProps = {
 }
 
 function getCell(brand: Brand, key: ExportColumnKey): string {
-  if (key === 'full_name') return brand.full_name ?? ''
-  const v = brand[key as keyof Brand]
+  const v = brand[key]
   if (v === null || v === undefined) return ''
   if (typeof v === 'boolean') return v ? 'sí' : 'no'
   return String(v)
@@ -88,17 +87,17 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
 
     try {
       if (format === 'csv') {
-        const csv = toCsv(
-          brands,
-          cols
+        const csv = toCsv(brands, cols)
+        downloadBlob(
+          `productex-brands-${Date.now()}.csv`,
+          csv,
+          'text/csv;charset=utf-8'
         )
-        downloadBlob(`productex-brands-${Date.now()}.csv`, csv, 'text/csv;charset=utf-8')
       } else {
         const payload = brands.map((b) => {
           const row: Record<string, unknown> = {}
           for (const k of cols) {
-            if (k === 'full_name') row.full_name = b.full_name
-            else row[k as string] = b[k as keyof Brand]
+            row[k as string] = b[k as keyof Brand]
           }
           return row
         })
@@ -132,7 +131,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
       >
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Exportar marcas
+            Exportar tiendas
           </h2>
           <button
             type="button"
@@ -144,7 +143,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
         </div>
 
         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          {brands.length} marca{brands.length === 1 ? '' : 's'}
+          {brands.length} registro{brands.length === 1 ? '' : 's'}
         </p>
 
         <div className="mt-4">

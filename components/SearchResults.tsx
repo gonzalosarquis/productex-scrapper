@@ -89,6 +89,9 @@ function SearchResultsInner() {
               Nombre
             </th>
             <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
+              Búsqueda
+            </th>
+            <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
               Estado
             </th>
             <th className="px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300">
@@ -104,6 +107,9 @@ function SearchResultsInner() {
             <tr key={t.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30">
               <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
                 {t.name}
+              </td>
+              <td className="max-w-[200px] truncate px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                {t.search_query}
               </td>
               <td className="px-4 py-3">
                 <Badge status={t.status}>{t.status}</Badge>

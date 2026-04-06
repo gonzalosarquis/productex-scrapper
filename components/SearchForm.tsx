@@ -7,17 +7,6 @@ import { toast } from 'sonner'
 import { useSearchTasks } from '@/hooks/useSearchTasks'
 import type { SearchFormData } from '@/lib/types'
 
-const PRESET_CATEGORIES = [
-  { label: 'Clothing (Brand)', value: 'Clothing' },
-  { label: 'Boutique', value: 'Boutique' },
-  { label: 'Tienda de ropa', value: 'Tienda de ropa' },
-  { label: 'Fashion Designer', value: 'Fashion Designer' },
-  { label: 'Clothing Store', value: 'Clothing Store' },
-  { label: 'Sportswear Store', value: 'Sportswear' },
-  { label: 'Underwear/Lingerie', value: 'Underwear' },
-  { label: 'Shopping & Retail', value: 'Shopping' },
-] as const
-
 type SearchFormProps = {
   onSearchComplete?: () => void
 }
@@ -27,11 +16,13 @@ function ChipInput({
   values,
   onChange,
   placeholder,
+  hint,
 }: {
   label: string
   values: string[]
   onChange: (next: string[]) => void
   placeholder?: string
+  hint?: string
 }) {
   const [input, setInput] = useState('')
 
@@ -51,6 +42,9 @@ function ChipInput({
       <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
+      {hint && (
+        <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">{hint}</p>
+      )}
       <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-200 bg-zinc-50/80 p-2 dark:border-zinc-700 dark:bg-zinc-900/50">
         {values.map((v) => (
           <span
@@ -99,32 +93,11 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
   const { startSearch, loading } = useSearchTasks()
 
   const [name, setName] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
-  const [customCategoryInput, setCustomCategoryInput] = useState('')
-  const [minFollowers, setMinFollowers] = useState('1000')
-  const [maxFollowers, setMaxFollowers] = useState('')
-  const [countries, setCountries] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('tienda de ropa')
   const [cities, setCities] = useState<string[]>([])
+  const [minRating, setMinRating] = useState(3.5)
+  const [maxResults, setMaxResults] = useState(20)
   const [submitCooldown, setSubmitCooldown] = useState(false)
-
-  const togglePreset = useCallback((value: string) => {
-    setCategories((prev) =>
-      prev.includes(value)
-        ? prev.filter((x) => x !== value)
-        : [...prev, value]
-    )
-  }, [])
-
-  const addCustomCategory = useCallback(() => {
-    const v = customCategoryInput.trim()
-    if (!v) return
-    setCategories((prev) => (prev.includes(v) ? prev : [...prev, v]))
-    setCustomCategoryInput('')
-  }, [customCategoryInput])
-
-  const removeCategory = (v: string) => {
-    setCategories((prev) => prev.filter((x) => x !== v))
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -134,36 +107,19 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
       toast.error('Nombre requerido')
       return
     }
-    if (categories.some((c) => c.length > 50)) {
-      toast.error('Categorías máximo 50 caracteres')
-      return
-    }
 
-    const min = Number(minFollowers)
-    if (!Number.isFinite(min) || min <= 0) {
-      toast.error('Seguidores debe ser positivo')
-      return
-    }
-
-    const maxRaw = maxFollowers.trim()
-    if (maxRaw !== '') {
-      const max = Number(maxRaw)
-      if (!Number.isFinite(max) || max < min) {
-        toast.error('Seguidores máximos debe ser mayor o igual al mínimo.')
-        return
-      }
-    }
+    const sq = searchQuery.trim() || 'tienda de ropa'
+    const mr = Math.min(100, Math.max(1, Math.round(maxResults)))
 
     setSubmitCooldown(true)
     setTimeout(() => setSubmitCooldown(false), 3000)
 
     const data: SearchFormData = {
       name: n,
-      categories,
-      countries,
+      search_query: sq,
       cities,
-      min_followers: min,
-      max_followers: maxFollowers.trim(),
+      min_rating: minRating,
+      max_results: mr,
     }
 
     await startSearch(data)
@@ -182,9 +138,8 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
           Nueva búsqueda
         </h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          El scrape usa hashtags de moda en Argentina; las categorías filtran
-          cuentas business de Instagram por rubro de negocio. Vacío = todas las
-          categorías de moda predefinidas.
+          Búsqueda en Google Maps vía Apify; encontrá tiendas de ropa y potenciales
+          clientes wholesale.
         </p>
       </div>
 
@@ -201,143 +156,76 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
           onChange={(e) => setName(e.target.value)}
           required
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900"
-          placeholder="Ej. Marcas streetwear AR"
+          placeholder="Ej. Tiendas CABA Q1"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Categorías de Instagram (opcional)
+        <label
+          htmlFor="biz-type"
+          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+        >
+          Tipo de negocio
         </label>
-        <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
-          Elegí presets o agregá categorías personalizadas. Sin selección se
-          aplican todas las categorías de moda predefinidas al filtrar.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {PRESET_CATEGORIES.map(({ label, value }) => {
-            const selected = categories.includes(value)
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => togglePreset(value)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                  selected
-                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'border-zinc-300 bg-transparent text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="mt-3">
-          <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
-            Categoría personalizada
-          </label>
-          <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-200 bg-zinc-50/80 p-2 dark:border-zinc-700 dark:bg-zinc-900/50">
-            <div className="flex min-w-[12rem] flex-1 items-center gap-1">
-              <input
-                value={customCategoryInput}
-                onChange={(e) => setCustomCategoryInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addCustomCategory()
-                  }
-                }}
-                placeholder="Ej. Moda infantil + Enter"
-                className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
-              />
-              <button
-                type="button"
-                onClick={addCustomCategory}
-                className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                aria-label="Añadir categoría"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {categories.length > 0 && (
-          <div className="mt-3">
-            <p className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              Seleccionadas ({categories.length})
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((v) => (
-                <span
-                  key={v}
-                  className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-sm shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-600"
-                >
-                  {v}
-                  <button
-                    type="button"
-                    onClick={() => removeCategory(v)}
-                    className="rounded p-0.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                    aria-label={`Quitar ${v}`}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        <input
+          id="biz-type"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+          placeholder="ej: tienda de ropa, indumentaria, boutique"
+        />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label
-            htmlFor="min-f"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
-            Seguidores mínimos
-          </label>
-          <input
-            id="min-f"
-            type="number"
-            min={1}
-            value={minFollowers}
-            onChange={(e) => setMinFollowers(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="max-f"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
-            Seguidores máximos (opcional)
-          </label>
-          <input
-            id="max-f"
-            type="number"
-            min={1}
-            value={maxFollowers}
-            onChange={(e) => setMaxFollowers(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-            placeholder="Vacío = sin límite"
-          />
-        </div>
-      </div>
-
-      <ChipInput
-        label="Países"
-        values={countries}
-        onChange={setCountries}
-        placeholder="Ej. Argentina"
-      />
       <ChipInput
         label="Ciudades"
+        hint="Vacío = se usan las principales ciudades de Argentina (ver configuración del scraper)."
         values={cities}
         onChange={setCities}
-        placeholder="Ej. Córdoba"
+        placeholder="ej: Buenos Aires"
       />
+
+      <div>
+        <label
+          htmlFor="min-rating"
+          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+        >
+          Rating mínimo de Google Maps: {minRating.toFixed(1)} ⭐
+        </label>
+        <input
+          id="min-rating"
+          type="range"
+          min={0}
+          max={5}
+          step={0.5}
+          value={minRating}
+          onChange={(e) => setMinRating(Number(e.target.value))}
+          className="w-full accent-zinc-900 dark:accent-zinc-100"
+        />
+        <div className="mt-1 flex justify-between text-xs text-zinc-500">
+          <span>0</span>
+          <span>5</span>
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="max-res"
+          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+        >
+          Resultados máximos (por ciudad, máx. 100)
+        </label>
+        <input
+          id="max-res"
+          type="number"
+          min={1}
+          max={100}
+          value={maxResults}
+          onChange={(e) =>
+            setMaxResults(Math.min(100, Math.max(1, Number(e.target.value) || 20)))
+          }
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+        />
+      </div>
 
       <button
         type="submit"

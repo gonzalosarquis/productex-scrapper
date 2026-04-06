@@ -1,8 +1,7 @@
 'use client'
 
 import { memo, useCallback, useMemo, useState } from 'react'
-import Image from 'next/image'
-import { Download, Search } from 'lucide-react'
+import { Download, ExternalLink, Instagram, Search, Star } from 'lucide-react'
 
 import { Badge } from '@/components/Badge'
 import { BrandModal } from '@/components/BrandModal'
@@ -15,11 +14,12 @@ import type { Brand } from '@/lib/types'
 function BrandsListInner() {
   const { brands, loading, updateBrand, deleteBrand } = useBrands()
 
-  const [usernameQ, setUsernameQ] = useState('')
+  const [nameQ, setNameQ] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [countryQ, setCountryQ] = useState('')
-  const [minFollowers, setMinFollowers] = useState('')
-  const [onlyWithEmail, setOnlyWithEmail] = useState(false)
+  const [cityQ, setCityQ] = useState('')
+  const [minRating, setMinRating] = useState('')
+  const [onlyWithInstagram, setOnlyWithInstagram] = useState(false)
+  const [onlyWithPhone, setOnlyWithPhone] = useState(false)
 
   const [brandModal, setBrandModal] = useState<{
     brand: Brand
@@ -29,89 +29,125 @@ function BrandsListInner() {
   const [exportOpen, setExportOpen] = useState(false)
 
   const filtered = useMemo(() => {
-    const minF = minFollowers.trim() === '' ? null : Number(minFollowers)
+    const minR = minRating.trim() === '' ? null : Number(minRating)
     return brands.filter((b) => {
       if (
-        usernameQ &&
-        !b.username.toLowerCase().includes(usernameQ.trim().toLowerCase())
+        nameQ &&
+        !b.name.toLowerCase().includes(nameQ.trim().toLowerCase())
       ) {
         return false
       }
       if (statusFilter && b.status !== statusFilter) return false
       if (
-        countryQ &&
-        !(b.country ?? '').toLowerCase().includes(countryQ.trim().toLowerCase())
+        cityQ &&
+        !(b.city ?? '').toLowerCase().includes(cityQ.trim().toLowerCase())
       ) {
         return false
       }
-      if (minF !== null && (!Number.isFinite(minF) || b.followers < minF)) {
+      if (
+        minR !== null &&
+        (!Number.isFinite(minR) || (b.rating ?? 0) < minR)
+      ) {
         return false
       }
-      if (onlyWithEmail && !b.email) return false
+      if (onlyWithInstagram && !b.instagram_url) return false
+      if (onlyWithPhone && !b.phone) return false
       return true
     })
-  }, [brands, usernameQ, statusFilter, countryQ, minFollowers, onlyWithEmail])
+  }, [
+    brands,
+    nameQ,
+    statusFilter,
+    cityQ,
+    minRating,
+    onlyWithInstagram,
+    onlyWithPhone,
+  ])
 
   const columns: ColumnDef<Brand>[] = useMemo(
     () => [
       {
-        key: 'avatar',
-        label: '',
-        className: 'w-14',
-        render: (b) =>
-          b.profile_image ? (
-            <Image
-              src={b.profile_image}
-              alt=""
-              width={40}
-              height={40}
-              className="rounded-full object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-400 dark:bg-zinc-800">
-              ?
-            </div>
-          ),
-      },
-      {
-        key: 'username',
-        label: 'Usuario',
+        key: 'name',
+        label: 'Nombre',
         render: (b) => (
           <span className="font-medium text-zinc-900 dark:text-zinc-100">
-            @{b.username}
+            {b.google_maps_url ? (
+              <a
+                href={b.google_maps_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sky-600 hover:underline dark:text-sky-400"
+              >
+                {b.name}
+                <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              </a>
+            ) : (
+              b.name
+            )}
           </span>
         ),
       },
       {
-        key: 'followers',
-        label: 'Seguidores',
+        key: 'phone',
+        label: 'Teléfono',
         render: (b) => (
-          <span className="tabular-nums">{b.followers.toLocaleString()}</span>
+          <span className="tabular-nums text-zinc-700 dark:text-zinc-300">
+            {b.phone ?? '—'}
+          </span>
         ),
       },
       {
-        key: 'score',
-        label: 'Score',
-        render: (b) => <span className="tabular-nums">{b.score}</span>,
+        key: 'city',
+        label: 'Ciudad',
+        render: (b) => b.city ?? '—',
+      },
+      {
+        key: 'rating',
+        label: 'Rating',
+        render: (b) => (
+          <span className="inline-flex items-center gap-0.5 tabular-nums">
+            {b.rating != null ? (
+              <>
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {b.rating.toFixed(1)}
+              </>
+            ) : (
+              '—'
+            )}
+          </span>
+        ),
+      },
+      {
+        key: 'reviews',
+        label: 'Reseñas',
+        render: (b) => (
+          <span className="tabular-nums">
+            {b.reviews_count != null ? b.reviews_count : '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'instagram',
+        label: 'Instagram',
+        render: (b) =>
+          b.instagram_url ? (
+            <a
+              href={b.instagram_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex text-pink-600 hover:text-pink-500 dark:text-pink-400"
+              title="Instagram"
+            >
+              <Instagram className="h-4 w-4" />
+            </a>
+          ) : (
+            '—'
+          ),
       },
       {
         key: 'status',
         label: 'Estado',
         render: (b) => <Badge status={b.status}>{b.status}</Badge>,
-      },
-      {
-        key: 'email',
-        label: 'Email',
-        render: (b) => (
-          <span className="max-w-[180px] truncate text-zinc-600 dark:text-zinc-400">
-            {b.email ?? '—'}
-          </span>
-        ),
-      },
-      {
-        key: 'country',
-        label: 'País',
-        render: (b) => b.country ?? '—',
       },
     ],
     []
@@ -133,13 +169,13 @@ function BrandsListInner() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[160px] flex-1">
             <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              Usuario
+              Nombre
             </label>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <input
-                value={usernameQ}
-                onChange={(e) => setUsernameQ(e.target.value)}
+                value={nameQ}
+                onChange={(e) => setNameQ(e.target.value)}
                 placeholder="Buscar…"
                 className="w-full rounded-lg border border-zinc-300 py-2 pl-9 pr-3 text-sm dark:border-zinc-600 dark:bg-zinc-900"
               />
@@ -164,33 +200,43 @@ function BrandsListInner() {
           </div>
           <div className="min-w-[120px] flex-1">
             <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              País
+              Ciudad
             </label>
             <input
-              value={countryQ}
-              onChange={(e) => setCountryQ(e.target.value)}
+              value={cityQ}
+              onChange={(e) => setCityQ(e.target.value)}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
             />
           </div>
-          <div className="w-28">
+          <div className="w-24">
             <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              Min. seguidores
+              Rating mín.
             </label>
             <input
               type="number"
               min={0}
-              value={minFollowers}
-              onChange={(e) => setMinFollowers(e.target.value)}
+              max={5}
+              step={0.1}
+              value={minRating}
+              onChange={(e) => setMinRating(e.target.value)}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
             />
           </div>
           <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm text-zinc-700 dark:text-zinc-300">
             <input
               type="checkbox"
-              checked={onlyWithEmail}
-              onChange={(e) => setOnlyWithEmail(e.target.checked)}
+              checked={onlyWithInstagram}
+              onChange={(e) => setOnlyWithInstagram(e.target.checked)}
             />
-            Con email
+            Con Instagram
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm text-zinc-700 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={onlyWithPhone}
+              onChange={(e) => setOnlyWithPhone(e.target.checked)}
+            />
+            Con teléfono
           </label>
           <button
             type="button"
@@ -208,7 +254,7 @@ function BrandsListInner() {
         columns={columns}
         getRowId={(b) => b.id}
         loading={loading}
-        emptyMessage="No hay marcas que coincidan con los filtros."
+        emptyMessage="No hay tiendas que coincidan con los filtros."
         onView={(b) => setBrandModal({ brand: b, readOnly: true })}
         onEdit={(b) => setBrandModal({ brand: b, readOnly: false })}
         onDelete={(b) => setDeleteBrandRow(b)}
@@ -224,10 +270,10 @@ function BrandsListInner() {
 
       <ConfirmModal
         isOpen={!!deleteBrandRow}
-        title="Eliminar marca"
+        title="Eliminar tienda"
         message={
           deleteBrandRow
-            ? `¿Eliminar @${deleteBrandRow.username}? Esta acción no se puede deshacer.`
+            ? `¿Eliminar "${deleteBrandRow.name}"? Esta acción no se puede deshacer.`
             : ''
         }
         confirmText="Eliminar"

@@ -44,45 +44,39 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => null)
-    if (
-      !body ||
-      typeof body.name !== 'string' ||
-      !Array.isArray(body.categories) ||
-      typeof body.min_followers !== 'number'
-    ) {
+    if (!body || typeof body.name !== 'string') {
       return NextResponse.json(
         {
           error: 'Invalid body',
-          message:
-            'Se requiere name (string), categories (array) y min_followers (número).',
+          message: 'Se requiere name (string).',
         },
         { status: 400 }
       )
     }
 
-    const categories = body.categories.map((c: unknown) => String(c))
-    const countries = Array.isArray(body.countries)
-      ? body.countries.map((c: unknown) => String(c))
-      : []
+    const search_query =
+      typeof body.search_query === 'string' && body.search_query.trim()
+        ? body.search_query.trim()
+        : 'tienda de ropa'
+
     const cities = Array.isArray(body.cities)
       ? body.cities.map((c: unknown) => String(c))
       : []
-    const min_followers = body.min_followers as number
-    const max_followers =
-      body.max_followers === null || body.max_followers === undefined
-        ? null
-        : Number(body.max_followers)
+
+    const min_rating =
+      typeof body.min_rating === 'number' ? body.min_rating : 0
+    const max_results =
+      typeof body.max_results === 'number' ? body.max_results : 100
 
     const { data: inserted, error: insertError } = await supabase
       .from('search_tasks')
       .insert({
         user_id: user.id,
         name: body.name,
-        categories,
-        countries,
+        search_query,
         cities,
-        min_followers,
-        max_followers,
+        min_rating,
+        max_results,
         status: 'pending',
       })
       .select('*')

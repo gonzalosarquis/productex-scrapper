@@ -72,16 +72,6 @@ export function useSearchTasks() {
           return
         }
 
-        const maxRaw = data.max_followers.trim()
-        const max_followers =
-          maxRaw === '' ? null : Number(maxRaw)
-        if (max_followers !== null && Number.isNaN(max_followers)) {
-          const msg = 'Máximo de seguidores inválido'
-          setError(msg)
-          toast.error(msg)
-          return
-        }
-
         const res = await fetch('/api/search', {
           method: 'POST',
           headers: {
@@ -90,11 +80,10 @@ export function useSearchTasks() {
           },
           body: JSON.stringify({
             name: data.name,
-            categories: data.categories,
-            countries: data.countries,
+            search_query: data.search_query,
             cities: data.cities,
-            min_followers: data.min_followers,
-            max_followers,
+            min_rating: data.min_rating,
+            max_results: data.max_results,
           }),
         })
 

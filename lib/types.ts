@@ -2,11 +2,10 @@ export interface SearchTask {
   id: string
   user_id: string
   name: string
-  categories: string[]
-  countries: string[]
+  search_query: string
   cities: string[]
-  min_followers: number
-  max_followers: number | null
+  min_rating: number
+  max_results: number
   status: 'pending' | 'running' | 'completed' | 'failed'
   apify_run_id: string | null
   brands_found: number
@@ -19,25 +18,16 @@ export interface Brand {
   id: string
   user_id: string
   search_task_id: string | null
-  username: string
-  full_name: string | null
-  bio: string | null
-  followers: number
-  following: number
-  posts_count: number
-  engagement_rate: number | null
-  avg_likes: number | null
-  avg_comments: number | null
-  posts_per_week: number | null
-  profile_image: string | null
-  website: string | null
-  email: string | null
+  name: string
   phone: string | null
-  country: string | null
+  address: string | null
   city: string | null
-  verified: boolean
-  is_business: boolean
+  rating: number | null
+  reviews_count: number | null
   instagram_url: string | null
+  website: string | null
+  google_maps_url: string | null
+  category: string | null
   status: 'pending' | 'contacted' | 'interested' | 'rejected' | 'client'
   score: number
   notes: string | null
@@ -58,9 +48,8 @@ export interface ScraperConfig {
 
 export interface SearchFormData {
   name: string
-  categories: string[]
-  countries: string[]
+  search_query: string
   cities: string[]
-  min_followers: number
-  max_followers: string
+  min_rating: number
+  max_results: number
 }

@@ -1,65 +1,58 @@
 import type { ScraperConfig, SearchTask } from '@/lib/types'
 
-export type ApifyRunStatus =
-  | 'RUNNING'
-  | 'SUCCEEDED'
-  | 'FAILED'
-  | 'TIMED-OUT'
+export type ApifyRunStatus = 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'TIMED-OUT'
 
 const API_BASE = 'https://api.apify.com/v2'
+const GOOGLE_MAPS_ACTOR = 'apify~google-maps-scraper'
 
-function encodeActorId(actorId: string): string {
-  return actorId.replace('/', '~')
-}
-
-function mapApifyStatus(raw: string): ApifyRunStatus {
-  switch (raw) {
-    case 'SUCCEEDED':
-      return 'SUCCEEDED'
-    case 'FAILED':
-    case 'ABORTED':
-      return 'FAILED'
-    case 'TIMED-OUT':
-    case 'TIMING-OUT':
-      return 'TIMED-OUT'
-    case 'RUNNING':
-    case 'READY':
-    default:
-      return 'RUNNING'
-  }
-}
+const ARGENTINA_CITIES = [
+  'Buenos Aires',
+  'Córdoba',
+  'Rosario',
+  'Mendoza',
+  'Tucumán',
+  'La Plata',
+  'Mar del Plata',
+  'Salta',
+  'Santa Fe',
+  'San Juan',
+  'Resistencia',
+  'Neuquén',
+  'Santiago del Estero',
+  'Corrientes',
+  'Posadas',
+  'Bahía Blanca',
+  'Paraná',
+  'Formosa',
+  'San Luis',
+  'Río Cuarto',
+]
 
 export class ApifyService {
-  /**
-   * Inicia un run del actor de Instagram: hashtags AR de moda (explore/tags).
-   * Las categorías de la tarea se filtran post-scrape en brand-processor.
-   */
   async startSearch(config: ScraperConfig, task: SearchTask): Promise<string> {
-    void task
     const token = config.apify_token
-    if (!token) {
-      throw new Error('Missing Apify token in scraper config')
+    if (!token) throw new Error('Missing Apify token')
+
+    const citiesToSearch =
+      task.cities.length > 0 ? task.cities : ARGENTINA_CITIES.slice(0, 5)
+
+    const searchStrings = citiesToSearch.map(
+      (city) => `${task.search_query} en ${city}, Argentina`
+    )
+
+    const body = {
+      searchStringsArray: searchStrings,
+      maxCrawledPlacesPerSearch: Math.ceil(
+        task.max_results / citiesToSearch.length
+      ),
+      language: 'es',
+      countryCode: 'ar',
+      includeWebResults: false,
+      scrapeDirectories: false,
+      deeperCityScrape: false,
     }
 
-    const actorPath = encodeActorId(config.actor_id || 'apify/instagram-scraper')
-    const url = `${API_BASE}/acts/${encodeURIComponent(actorPath)}/runs?token=${encodeURIComponent(token)}`
-
-    const body: Record<string, unknown> = {
-      hashtags: [
-        'marcaargentina',
-        'hechoenargentina',
-        'indumentariaargentina',
-        'modaargentina',
-        'showroomargentina',
-        'ropaargentina',
-        'marcaderopa',
-        'tiendaonlineargentina',
-      ],
-      resultsType: 'profiles',
-      resultsLimit: Math.min(config.max_items, 100),
-      addParentData: false,
-    }
-
+    const url = `${API_BASE}/acts/${GOOGLE_MAPS_ACTOR}/runs?token=${encodeURIComponent(token)}`
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,67 +63,38 @@ export class ApifyService {
       data?: { id: string }
       error?: { message: string }
     }
-
     if (!res.ok || !json.data?.id) {
-      throw new Error(
-        json.error?.message ?? `Apify start run failed (${res.status})`
-      )
+      throw new Error(json.error?.message ?? `Apify error (${res.status})`)
     }
-
     return json.data.id
   }
 
-  async getRunStatus(
-    runId: string,
-    token: string
-  ): Promise<ApifyRunStatus> {
+  async getRunStatus(runId: string, token: string): Promise<ApifyRunStatus> {
     const url = `${API_BASE}/actor-runs/${encodeURIComponent(runId)}?token=${encodeURIComponent(token)}`
-    const res = await fetch(url, { method: 'GET' })
+    const res = await fetch(url)
     const json = (await res.json()) as {
       data?: { status: string }
       error?: { message: string }
     }
-
     if (!res.ok || !json.data?.status) {
-      throw new Error(
-        json.error?.message ?? `Apify get run failed (${res.status})`
-      )
+      throw new Error(json.error?.message ?? `Status error (${res.status})`)
     }
-
-    return mapApifyStatus(json.data.status)
+    const s = json.data.status
+    if (s === 'SUCCEEDED') return 'SUCCEEDED'
+    if (s === 'FAILED' || s === 'ABORTED') return 'FAILED'
+    if (s === 'TIMED-OUT' || s === 'TIMING-OUT') return 'TIMED-OUT'
+    return 'RUNNING'
   }
 
   async getRunResults(runId: string, token: string): Promise<unknown[]> {
     const url = `${API_BASE}/actor-runs/${encodeURIComponent(runId)}/dataset/items?token=${encodeURIComponent(token)}`
-    const res = await fetch(url, { method: 'GET' })
+    const res = await fetch(url)
     const json: unknown = await res.json()
-
-    if (!res.ok) {
-      const err = json as { error?: { message: string } }
-      throw new Error(
-        err.error?.message ?? `Apify dataset items failed (${res.status})`
-      )
-    }
-
-    if (Array.isArray(json)) {
-      return json
-    }
-
+    if (Array.isArray(json)) return json
     if (json && typeof json === 'object' && 'data' in json) {
-      const data = (json as { data: unknown }).data
-      if (Array.isArray(data)) {
-        return data
-      }
-      if (
-        data &&
-        typeof data === 'object' &&
-        'items' in data &&
-        Array.isArray((data as { items: unknown[] }).items)
-      ) {
-        return (data as { items: unknown[] }).items
-      }
+      const d = (json as { data: unknown }).data
+      if (Array.isArray(d)) return d
     }
-
     return []
   }
 }

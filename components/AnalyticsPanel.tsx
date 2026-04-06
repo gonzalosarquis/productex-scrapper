@@ -73,10 +73,10 @@ export default function AnalyticsPanel() {
   )
 
   const pieData = useMemo(() => {
-    return Object.entries(metrics.byCountry)
+    return Object.entries(metrics.byCity)
       .slice(0, 5)
       .map(([name, value]) => ({ name, value }))
-  }, [metrics.byCountry])
+  }, [metrics.byCity])
 
   const hasAnyBrand = filtered.length > 0
   const hasStatusData = statusChartData.some((d) => d.value > 0)
@@ -137,8 +137,8 @@ export default function AnalyticsPanel() {
               value={metrics.totalBrands}
             />
             <KpiCard
-              label="Engagement promedio"
-              value={`${metrics.avgEngagement.toFixed(2)}%`}
+              label="Rating promedio"
+              value={metrics.avgRating.toFixed(2)}
             />
             <KpiCard
               label="Tasa de contacto"
@@ -166,13 +166,18 @@ export default function AnalyticsPanel() {
                         border: '1px solid #e4e4e7',
                       }}
                     />
-                    <Bar dataKey="value" name="Marcas" fill={BAR_FILL} radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="value"
+                      name="Tiendas"
+                      fill={BAR_FILL}
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               )}
             </ChartCard>
 
-            <ChartCard title="Top países" icon={PieChartIcon}>
+            <ChartCard title="Top ciudades" icon={PieChartIcon}>
               {!hasPieData ? (
                 <EmptyChart />
               ) : (
@@ -228,15 +233,13 @@ export default function AnalyticsPanel() {
                         <td className="py-2 pr-4 tabular-nums text-zinc-500">
                           {i + 1}
                         </td>
-                        <td className="py-2 pr-4 font-medium">@{b.username}</td>
+                        <td className="py-2 pr-4 font-medium">{b.name}</td>
                         <td className="py-2 pr-4 tabular-nums">{b.score}</td>
                         <td className="py-2 pr-4 tabular-nums">
-                          {b.followers.toLocaleString()}
+                          {b.rating != null ? b.rating.toFixed(1) : '—'}
                         </td>
                         <td className="py-2 tabular-nums">
-                          {b.engagement_rate != null
-                            ? `${b.engagement_rate.toFixed(2)}%`
-                            : '—'}
+                          {b.reviews_count != null ? b.reviews_count : '—'}
                         </td>
                       </tr>
                     ))}

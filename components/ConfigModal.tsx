@@ -36,7 +36,7 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
   const [saving, setSaving] = useState(false)
   const [showToken, setShowToken] = useState(false)
   const [apify_token, setApifyToken] = useState('')
-  const [actor_id, setActorId] = useState('apify/instagram-scraper')
+  const [actor_id, setActorId] = useState('apify/google-maps-scraper')
   const [max_items, setMaxItems] = useState(50)
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
         const c = json.config
         if (cancelled || !c) return
         setApifyToken(c.apify_token ?? '')
-        setActorId(c.actor_id || 'apify/instagram-scraper')
+        setActorId(c.actor_id || 'apify/google-maps-scraper')
         setMaxItems(c.max_items ?? 50)
       } catch {
         toast.error('Error al cargar configuración')
@@ -80,7 +80,7 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
         method: 'POST',
         body: JSON.stringify({
           apify_token: apify_token.trim() || null,
-          actor_id: actor_id.trim() || 'apify/instagram-scraper',
+          actor_id: actor_id.trim() || 'apify/google-maps-scraper',
           max_items: Number(max_items) || 50,
         }),
       })
@@ -172,7 +172,7 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Máx. ítems por run
+                Resultados máximos por ciudad
               </label>
               <input
                 type="number"

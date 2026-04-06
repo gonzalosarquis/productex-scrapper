@@ -10,11 +10,11 @@ const ALL_STATUSES: Brand['status'][] = [
 
 export type AnalyticsResult = {
   totalBrands: number
-  avgEngagement: number
-  avgFollowers: number
+  avgRating: number
+  avgReviews: number
   byStatus: Record<Brand['status'], number>
-  byCountry: Record<string, number>
-  engagementDistribution: { label: string; count: number }[]
+  byCity: Record<string, number>
+  ratingDistribution: { label: string; count: number }[]
   topBrands: Brand[]
   contactRate: number
   conversionRate: number
@@ -23,18 +23,17 @@ export type AnalyticsResult = {
 export function calculateAnalytics(brands: Brand[]): AnalyticsResult {
   const totalBrands = brands.length
 
-  const withEngagement = brands.filter((b) => b.engagement_rate != null)
-  const avgEngagement =
-    withEngagement.length > 0
-      ? withEngagement.reduce(
-          (s, b) => s + (b.engagement_rate as number),
-          0
-        ) / withEngagement.length
+  const withRating = brands.filter((b) => b.rating != null)
+  const avgRating =
+    withRating.length > 0
+      ? withRating.reduce((s, b) => s + (b.rating as number), 0) /
+        withRating.length
       : 0
 
-  const avgFollowers =
+  const avgReviews =
     totalBrands > 0
-      ? brands.reduce((s, b) => s + b.followers, 0) / totalBrands
+      ? brands.reduce((s, b) => s + (b.reviews_count ?? 0), 0) /
+        totalBrands
       : 0
 
   const byStatus = {} as Record<Brand['status'], number>
@@ -45,33 +44,33 @@ export function calculateAnalytics(brands: Brand[]): AnalyticsResult {
     byStatus[b.status] = (byStatus[b.status] ?? 0) + 1
   }
 
-  const countryCounts: Record<string, number> = {}
+  const cityCounts: Record<string, number> = {}
   for (const b of brands) {
-    const key = b.country?.trim() || 'Sin país'
-    countryCounts[key] = (countryCounts[key] ?? 0) + 1
+    const key = b.city?.trim() || 'Sin ciudad'
+    cityCounts[key] = (cityCounts[key] ?? 0) + 1
   }
-  const byCountry = Object.fromEntries(
-    Object.entries(countryCounts)
+  const byCity = Object.fromEntries(
+    Object.entries(cityCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
   )
 
-  let b0 = 0
-  let b1 = 0
-  let b2 = 0
-  let b3 = 0
+  let r0 = 0
+  let r1 = 0
+  let r2 = 0
+  let r3 = 0
   for (const b of brands) {
-    const e = b.engagement_rate ?? 0
-    if (e < 1) b0++
-    else if (e < 3) b1++
-    else if (e < 5) b2++
-    else b3++
+    const r = b.rating ?? 0
+    if (r < 2) r0++
+    else if (r < 3.5) r1++
+    else if (r < 4.5) r2++
+    else r3++
   }
-  const engagementDistribution = [
-    { label: '0-1%', count: b0 },
-    { label: '1-3%', count: b1 },
-    { label: '3-5%', count: b2 },
-    { label: '5%+', count: b3 },
+  const ratingDistribution = [
+    { label: '0–2', count: r0 },
+    { label: '2–3.5', count: r1 },
+    { label: '3.5–4.5', count: r2 },
+    { label: '4.5–5', count: r3 },
   ]
 
   const topBrands = [...brands]
@@ -89,11 +88,11 @@ export function calculateAnalytics(brands: Brand[]): AnalyticsResult {
 
   return {
     totalBrands,
-    avgEngagement,
-    avgFollowers,
+    avgRating,
+    avgReviews,
     byStatus,
-    byCountry,
-    engagementDistribution,
+    byCity,
+    ratingDistribution,
     topBrands,
     contactRate,
     conversionRate,
@@ -112,13 +111,15 @@ function csvCell(v: string | number | null | undefined): string {
 
 export function generateCSVReport(brands: Brand[]): string {
   const headers = [
-    'username',
-    'full_name',
-    'followers',
-    'engagement_rate',
-    'email',
+    'name',
+    'city',
+    'rating',
+    'reviews_count',
     'phone',
-    'country',
+    'instagram_url',
+    'website',
+    'google_maps_url',
+    'category',
     'status',
     'score',
     'created_at',
@@ -127,15 +128,15 @@ export function generateCSVReport(brands: Brand[]): string {
   for (const b of brands) {
     lines.push(
       [
-        csvCell(b.username),
-        csvCell(b.full_name),
-        csvCell(b.followers),
-        csvCell(
-          b.engagement_rate != null ? b.engagement_rate.toFixed(4) : ''
-        ),
-        csvCell(b.email),
+        csvCell(b.name),
+        csvCell(b.city),
+        csvCell(b.rating),
+        csvCell(b.reviews_count),
         csvCell(b.phone),
-        csvCell(b.country),
+        csvCell(b.instagram_url),
+        csvCell(b.website),
+        csvCell(b.google_maps_url),
+        csvCell(b.category),
         csvCell(b.status),
         csvCell(b.score),
         csvCell(b.created_at),

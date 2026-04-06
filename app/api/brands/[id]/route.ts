@@ -6,12 +6,7 @@ import type { Brand } from '@/lib/types'
 
 type Params = { params: Promise<{ id: string }> }
 
-const ALLOWED_PUT: (keyof Brand)[] = [
-  'status',
-  'notes',
-  'email',
-  'phone',
-]
+const ALLOWED_PUT: (keyof Brand)[] = ['status', 'notes', 'phone']
 
 export async function PUT(request: Request, context: Params) {
   try {

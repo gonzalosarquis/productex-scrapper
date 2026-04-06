@@ -5,49 +5,26 @@ import { processBrandData } from '@/lib/brand-processor'
 import type { Brand, SearchTask } from '@/lib/types'
 
 function toBrandRow(task: SearchTask, b: Partial<Brand>): Record<string, unknown> {
-  if (!b.username) {
-    throw new Error('Brand row missing username')
-  }
+  if (!b.name) throw new Error('Brand missing name')
   return {
     user_id: task.user_id,
     search_task_id: task.id,
-    username: b.username,
-    full_name: b.full_name ?? null,
-    bio: b.bio ?? null,
-    followers: b.followers ?? 0,
-    following: b.following ?? 0,
-    posts_count: b.posts_count ?? 0,
-    engagement_rate: b.engagement_rate ?? null,
-    avg_likes: b.avg_likes ?? null,
-    avg_comments: b.avg_comments ?? null,
-    posts_per_week: b.posts_per_week ?? null,
-    profile_image: b.profile_image ?? null,
-    website: b.website ?? null,
-    email: b.email ?? null,
+    name: b.name,
     phone: b.phone ?? null,
-    country: b.country ?? null,
+    address: b.address ?? null,
     city: b.city ?? null,
-    verified: b.verified ?? false,
-    is_business: b.is_business ?? false,
+    rating: b.rating ?? null,
+    reviews_count: b.reviews_count ?? 0,
     instagram_url: b.instagram_url ?? null,
+    website: b.website ?? null,
+    google_maps_url: b.google_maps_url ?? null,
+    category: b.category ?? null,
     status: b.status ?? 'pending',
     score: b.score ?? 0,
     notes: b.notes ?? null,
     last_contacted_at: b.last_contacted_at ?? null,
     updated_at: new Date().toISOString(),
   }
-}
-
-function filterByFollowerRange(
-  brands: Partial<Brand>[],
-  task: SearchTask
-): Partial<Brand>[] {
-  return brands.filter((b) => {
-    const f = b.followers ?? 0
-    if (f < task.min_followers) return false
-    if (task.max_followers != null && f > task.max_followers) return false
-    return true
-  })
 }
 
 /**
@@ -64,8 +41,7 @@ export async function finalizeSuccessfulRun(
   }
 
   const raw = await apify.getRunResults(task.apify_run_id, token)
-  let rows = processBrandData(raw, task.categories ?? [])
-  rows = filterByFollowerRange(rows, task)
+  const rows = processBrandData(raw, task.min_rating ?? 0)
 
   if (rows.length === 0) {
     await supabase
@@ -84,7 +60,7 @@ export async function finalizeSuccessfulRun(
   const payload = rows.map((b) => toBrandRow(task, b))
 
   const { error: upsertError } = await supabase.from('brands').upsert(payload, {
-    onConflict: 'user_id,username',
+    onConflict: 'user_id,google_maps_url',
   })
 
   if (upsertError) {
