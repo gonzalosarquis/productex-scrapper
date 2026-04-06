@@ -8,19 +8,6 @@ export type ApifyRunStatus =
 
 const API_BASE = 'https://api.apify.com/v2'
 
-const ARGENTINA_FASHION_HASHTAGS = [
-  'marcaargentina',
-  'hechoenargentina',
-  'indumentariaargentina',
-  'modaargentina',
-  'showroomargentina',
-  'ropafemenina',
-  'ropaargentina',
-  'tiendaonlineargentina',
-  'marcaderopa',
-  'indumentaria',
-]
-
 function encodeActorId(actorId: string): string {
   return actorId.replace('/', '~')
 }
@@ -57,15 +44,20 @@ export class ApifyService {
     const actorPath = encodeActorId(config.actor_id || 'apify/instagram-scraper')
     const url = `${API_BASE}/acts/${encodeURIComponent(actorPath)}/runs?token=${encodeURIComponent(token)}`
 
-    const startUrls = ARGENTINA_FASHION_HASHTAGS.map((tag) => ({
-      url: `https://www.instagram.com/explore/tags/${tag}/`,
-    }))
-
     const body: Record<string, unknown> = {
-      startUrls,
-      resultsType: 'posts',
+      hashtags: [
+        'marcaargentina',
+        'hechoenargentina',
+        'indumentariaargentina',
+        'modaargentina',
+        'showroomargentina',
+        'ropaargentina',
+        'marcaderopa',
+        'tiendaonlineargentina',
+      ],
+      resultsType: 'profiles',
       resultsLimit: Math.min(config.max_items, 100),
-      addParentData: true,
+      addParentData: false,
     }
 
     const res = await fetch(url, {
