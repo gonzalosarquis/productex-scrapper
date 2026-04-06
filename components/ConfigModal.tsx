@@ -142,7 +142,7 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
                   value={apify_token}
                   onChange={(e) => setApifyToken(e.target.value)}
                   autoComplete="off"
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 pr-10 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500"
                   placeholder="apify_api_…"
                 />
                 <button
@@ -166,7 +166,8 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
               <input
                 value={actor_id}
                 onChange={(e) => setActorId(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                autoComplete="off"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
               />
             </div>
             <div>
@@ -178,7 +179,8 @@ export function ConfigModal({ isOpen, onClose }: ConfigModalProps) {
                 min={1}
                 value={max_items}
                 onChange={(e) => setMaxItems(Number(e.target.value))}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                autoComplete="off"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
