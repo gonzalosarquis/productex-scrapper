@@ -1,20 +1,50 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BarChart3, Loader2, Search, TrendingUp, Users } from 'lucide-react'
 
+import { createClient } from '@/lib/supabase/client'
 import { useBrands } from '@/hooks/useBrands'
-import { useSearchTasks } from '@/hooks/useSearchTasks'
+import type { SearchTask } from '@/lib/types'
 
 export function DashboardStats() {
   const { brands, loading: loadingBrands } = useBrands()
-  const { tasks, loading: loadingTasks, fetchTasks } = useSearchTasks()
+  const [activeSearches, setActiveSearches] = useState<number | null>(null)
+  const [loadingSearchCount, setLoadingSearchCount] = useState(true)
 
   useEffect(() => {
-    void fetchTasks()
-  }, [fetchTasks])
+    let cancelled = false
+    async function loadSearchCount() {
+      setLoadingSearchCount(true)
+      try {
+        const supabase = createClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (!session?.access_token) {
+          window.location.href = '/auth'
+          return
+        }
+        const res = await fetch('/api/search', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        const json = (await res.json()) as { tasks?: SearchTask[] }
+        const tasks = json.tasks ?? []
+        const n = tasks.filter(
+          (t) => t.status === 'running' || t.status === 'pending'
+        ).length
+        if (!cancelled) setActiveSearches(n)
+      } finally {
+        if (!cancelled) setLoadingSearchCount(false)
+      }
+    }
+    void loadSearchCount()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
-  const loading = loadingBrands || loadingTasks
+  const loading = loadingBrands || loadingSearchCount
 
   const totalBrands = brands.length
   const contactedBrands = brands.filter((b) =>
@@ -23,10 +53,6 @@ export function DashboardStats() {
   const interested = brands.filter((b) => b.status === 'interested').length
   const interestRate =
     totalBrands > 0 ? Math.round((interested / totalBrands) * 1000) / 10 : 0
-
-  const activeSearches = tasks.filter(
-    (t) => t.status === 'running' || t.status === 'pending'
-  ).length
 
   const cards = [
     {
@@ -49,7 +75,7 @@ export function DashboardStats() {
     },
     {
       label: 'Búsquedas Activas',
-      value: activeSearches,
+      value: activeSearches ?? '—',
       icon: Search,
       sub: 'pending o running',
     },
