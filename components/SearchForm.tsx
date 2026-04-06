@@ -68,14 +68,14 @@ function ChipInput({
               }
             }}
             placeholder={placeholder}
-            className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-zinc-400"
+            className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
           />
-          <button
-            type="button"
-            onClick={add}
-            className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-700"
-            aria-label="Añadir"
-          >
+            <button
+              type="button"
+              onClick={add}
+              className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              aria-label="Añadir"
+            >
             <Plus className="h-4 w-4" />
           </button>
         </div>
@@ -166,7 +166,7 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
           Nueva búsqueda
         </h2>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Define keywords y filtros; se usará tu configuración de Apify si existe.
         </p>
       </div>
@@ -219,12 +219,12 @@ export function SearchForm({ onSearchComplete }: SearchFormProps) {
                 }
               }}
               placeholder="keyword + Enter"
-              className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 text-sm outline-none"
+              className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
             />
             <button
               type="button"
               onClick={addKeyword}
-              className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               <Plus className="h-4 w-4" />
             </button>

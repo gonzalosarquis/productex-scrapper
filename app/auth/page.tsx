@@ -64,7 +64,7 @@ export default function AuthPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 text-zinc-900 shadow-sm">
         <h1 className="text-center text-xl font-semibold text-zinc-900">
           Productex Scrapper
         </h1>

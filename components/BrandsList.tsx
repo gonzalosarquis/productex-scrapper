@@ -132,7 +132,7 @@ function BrandsListInner() {
       <div className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[160px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
               Usuario
             </label>
             <div className="relative">
@@ -146,7 +146,7 @@ function BrandsListInner() {
             </div>
           </div>
           <div className="min-w-[140px]">
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
               Estado
             </label>
             <select
@@ -163,7 +163,7 @@ function BrandsListInner() {
             </select>
           </div>
           <div className="min-w-[120px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
               País
             </label>
             <input
@@ -173,7 +173,7 @@ function BrandsListInner() {
             />
           </div>
           <div className="w-28">
-            <label className="mb-1 block text-xs font-medium text-zinc-500">
+            <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
               Min. seguidores
             </label>
             <input
@@ -184,7 +184,7 @@ function BrandsListInner() {
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
             />
           </div>
-          <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm">
+          <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm text-zinc-700 dark:text-zinc-300">
             <input
               type="checkbox"
               checked={onlyWithEmail}
@@ -195,7 +195,7 @@ function BrandsListInner() {
           <button
             type="button"
             onClick={() => setExportOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             <Download className="h-4 w-4" />
             Exportar

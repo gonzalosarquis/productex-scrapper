@@ -1,5 +1,18 @@
 @import 'tailwindcss';
 
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-zinc-400 dark:text-zinc-500;
+  }
+
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    color: inherit;
+  }
+}
+
 /* Autofill / contraste en inputs oscuros (Chrome, Safari, Edge) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

@@ -143,7 +143,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
           </button>
         </div>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           {brands.length} marca{brands.length === 1 ? '' : 's'}
         </p>
 
@@ -152,7 +152,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
             Formato
           </span>
           <div className="mt-2 flex gap-4">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200">
               <input
                 type="radio"
                 name="fmt"
@@ -161,7 +161,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
               />
               CSV
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200">
               <input
                 type="radio"
                 name="fmt"
@@ -177,7 +177,10 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
           <p className="mb-2 text-xs font-medium uppercase text-zinc-500">Columnas</p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {ALL_COLUMNS.map((c) => (
-              <label key={c.key} className="flex cursor-pointer items-center gap-2">
+              <label
+                key={c.key}
+                className="flex cursor-pointer items-center gap-2 text-zinc-800 dark:text-zinc-200"
+              >
                 <input
                   type="checkbox"
                   checked={selected.has(c.key)}
@@ -193,7 +196,7 @@ export function ExportModal({ brands, isOpen, onClose }: ExportModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm dark:border-zinc-600"
+            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-600 dark:text-zinc-200"
           >
             Cancelar
           </button>
